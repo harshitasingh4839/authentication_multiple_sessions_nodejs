@@ -1,0 +1,29 @@
+GET http://localhost:3000
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE2OTI1Mjk4NTMsImV4cCI6MTY5MjUzMzQ1MywiYXVkIjoiNjRlMWVhNTc0ODk0MGVjZWJjZWU4OGUzIn0.NCItjB7Wn0FcZgNifdbbnvqItl-VXb1dXozhBIDKSgg
+
+### Register Route
+POST http://localhost:3000/auth/register
+
+Content-Type: application/json;
+
+{
+  "email" : "jhondoe@gmail.com",
+  "password" : "1234" 
+}
+
+### Login Route
+POST http://localhost:3000/auth/login
+
+Content-Type: application/json;
+
+{
+  "email" : "harshi@gmail.com",
+  "password" : "pass" 
+}
+
+
+### Refresh-token Route
+POST http://localhost:3000/auth/refresh-token
+
+### Logout Route
+DELETE  http://localhost:3000/auth/logout

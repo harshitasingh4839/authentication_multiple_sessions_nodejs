@@ -62,52 +62,71 @@ router.post('/refresh-token', async(req,res,next)=>{
     const { refreshToken } = req.body
     if (!refreshToken) throw createError.BadRequest()
     const userId = await verifyRefreshToken(refreshToken);
+
+   // Delete the old refresh token
+    client.srem(userId,refreshToken);
   
     // Give a new pair of access-token and refresh token
     const accessToken = await signAccessToken(userId)
     const refToken = await signRefreshToken(userId)
     res.send({ accessToken: accessToken, refreshToken: refToken })
   } catch (error) {
-    
     next(error)
   }
 })
 
-// To delete the refresh token from redis server 
-router.delete('/logout', async(req,res,next)=>{
+// To delete the refresh token from redis server for 'single-device login
 
-  try {
-    const { refreshToken } = req.body
-    if (!refreshToken) throw createError.BadRequest()
-    const userId = await verifyRefreshToken(refreshToken)
-  //   client.DEL(userId, (err, val) => {
-  //     if (err) {
-  //       console.log(err.message)
-  //       throw createError.InternalServerError()
-  //     }
-  //     console.log(val)
-  //     res.sendStatus(204)
-  //   })
+// router.delete('/logout', async(req,res,next)=>{
+
+//   try {
+//     const { refreshToken } = req.body
+//     if (!refreshToken) throw createError.BadRequest()
+//     const userId = await verifyRefreshToken(refreshToken)
 
   // To delete the refresh-token from redis server 
-  return new Promise((resolve, reject) => {
-    client.del(userId)
-      .then(deletedCount => {
-        if (deletedCount === 1) {
-          // console.log(userId);
-          res.sendStatus(204);
-          resolve(); // Key deleted successfully
-        } else {
-          reject(createError.InternalServerError());
-        }
-      })
-      .catch(error => {
-        reject(error);
-      });
+  // return new Promise((resolve, reject) => {
+
+    // delete the refresh-token for single device login 
+
+  //   client.del(userId)
+  //     .then(deletedCount => {
+  //       if (deletedCount === 1) {
+  //         // console.log(userId);
+  //         res.sendStatus(204);
+  //         resolve(); // Key deleted successfully
+  //       } else {
+  //         reject(createError.InternalServerError());
+  //       }
+  //     })
+  //     .catch(error => {
+  //       reject(error);
+  //     });
+  // });
+
+  router.delete('/logout', async (req, res, next) => {
+    try {
+      const { refreshToken } = req.body;
+      if (!refreshToken) throw createError.BadRequest();
+      const userId = await verifyRefreshToken(refreshToken);
+  
+      // Delete the specific refresh token from the Redis set (Option 2)
+      client.srem(userId , refreshToken)
+        .then(deletedCount => {
+          if (deletedCount === 1) {
+            res.sendStatus(204);
+          } else {
+            res.status(404).send({ error: 'Refresh token not found' });
+          }
+        })
+        .catch(error => {
+          console.error(error.message);
+          res.status(500).send({ error: 'Internal Server Error' });
+        });
+    } catch (error) {
+      next(error);
+    }
   });
-  } catch (error) {
-    next(error)
-  }
-})
+  
 
 module.exports = router

@@ -59,11 +59,16 @@ module.exports = {
           return;
         }
 
+        // Restrict the number of devices
         if (count >= 3) {
           
-        // Restrict the number of devices
-          reject(createError.TooManyRequests('Maximum number of devices reached'));
-        } else {
+          // reject(createError.TooManyRequests('Maximum number of devices reached'));
+
+        // If the number of logged in device cross the max limit, then the first log in device will 
+        // logout and the refersh-token will also pop out of the redis set data structure
+          client.spop(userId,1);
+        } 
+        // else {
           JWT.sign(payload, secret, options, (err, token) => {
             if (err) {
               console.log(err.message);
@@ -88,7 +93,7 @@ module.exports = {
               });
             }
           });
-        }
+        // }
       });
     });
   },
